@@ -6,8 +6,8 @@ import os
 from PIL import Image, ImageTk
 import pikepdf  # pikepdfを使用
 
-SCREEN_HEIGHT = 1000
-SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 1300
+SCREEN_WIDTH = 1000
 SCREEN_TITLE = "PDF Converter Tool"
 
 DEFAULT_PADY = 20
@@ -81,7 +81,7 @@ class TkinterApp:
 
         # サムネイル表示エリア
         self.thumbnail_frame = tkinter.Frame(split_tab)
-        self.thumbnail_frame.pack(pady=DEFAULT_PADY)
+        self.thumbnail_frame.pack(pady=DEFAULT_PADY, fill="both", expand=True)
 
         # キャンバスとスクロールバーの作成
         self.canvas = tkinter.Canvas(self.thumbnail_frame)
@@ -185,7 +185,7 @@ class TkinterApp:
 
         # サムネイル画像を表示
         for i, page in enumerate(pages):
-            thumbnail = page.resize((150, 150))
+            thumbnail = page.resize((150, 150))  # サイズを調整
             self.thumbnails.append(thumbnail)
 
             # 画像をTkinterで表示可能な形式に変換
