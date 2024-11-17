@@ -241,12 +241,20 @@ class TkinterApp:
                 new_pdf.pages.append(pdf.pages[page_num])
 
             # 出力ファイル名を決定
-            output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_combined.pdf")
+            output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}.pdf")
 
             # 新しいPDFを保存
             new_pdf.save(output_filename)
 
             print(f"結合されたPDFが保存されました: {output_filename}")
+
+            # ページ選択を初期化
+            self.selected_pages.clear()
+
+            # サムネイルのハイライトをリセット
+            for button in self.highlighted_buttons:
+                button.config(highlightbackground=None, highlightthickness=0)
+            self.highlighted_buttons.clear()
 
         except Exception as e:
             print(f"PDFの結合中にエラーが発生しました: {e}")
