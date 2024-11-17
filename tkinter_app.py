@@ -3,6 +3,8 @@ from tkinter import filedialog
 from tkinter import ttk
 from pdf2image import convert_from_path
 import os
+from PIL import Image, ImageTk
+import pikepdf  # pikepdfを使用
 
 SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 500
@@ -22,6 +24,8 @@ class TkinterApp:
         self.root.geometry(f"{SCREEN_HEIGHT}x{SCREEN_WIDTH}")
 
         self.selected_pdf = None
+        self.selected_pages = []  # 選択されたページを保持
+        self.thumbnails = []  # サムネイル画像を保持
         self.init_ui()
 
         self.root.mainloop()
@@ -75,6 +79,10 @@ class TkinterApp:
         # PDF分割ボタン
         self.create_split_button(split_tab)
 
+        # サムネイル表示エリア
+        self.thumbnail_frame = tkinter.Frame(split_tab)
+        self.thumbnail_frame.pack(pady=DEFAULT_PADY)
+
     def create_output_filename_input(self, parent):
         """出力ファイル名入力フィールドを作成"""
         output_label = tkinter.Label(parent, text="Output Filename :")
@@ -121,6 +129,7 @@ class TkinterApp:
             print(f"選択されたPDFファイル: {file_name}")
             self.file_label.config(text=file_name)
             self.selected_pdf = file_name
+            self.load_pdf_thumbnails(file_name)
         else:
             print("ファイルが選択されませんでした。")
             self.selected_pdf = None
@@ -153,9 +162,65 @@ class TkinterApp:
         except Exception as e:
             print(f"エラーが発生しました。: {e}")
 
+    def load_pdf_thumbnails(self, pdf_path):
+        """PDFのサムネイルを生成して表示する"""
+        self.thumbnails.clear()
+
+        pages = convert_from_path(pdf_path, dpi=DEFAULT_DPI)
+
+        # サムネイル画像を表示
+        for i, page in enumerate(pages):
+            thumbnail = page.resize((150, 150))
+            self.thumbnails.append(thumbnail)
+
+            # 画像をTkinterで表示可能な形式に変換
+            thumbnail_tk = ImageTk.PhotoImage(thumbnail)
+
+            # サムネイルをクリックできるようにボタンとして表示
+            thumbnail_button = tkinter.Button(self.thumbnail_frame, image=thumbnail_tk, command=lambda i=i: self.select_page(i))
+            thumbnail_button.image = thumbnail_tk  # 参照を保持して画像がガーベジコレクションされないようにする
+            thumbnail_button.grid(row=i // 5, column=i % 5, padx=5, pady=5)
+
+    def select_page(self, page_index):
+        """ページを選択する処理"""
+        if page_index in self.selected_pages:
+            self.selected_pages.remove(page_index)
+            print(f"ページ {page_index + 1} を解除しました")
+        else:
+            self.selected_pages.append(page_index)
+            print(f"ページ {page_index + 1} を選択しました")
+
     def split_pdf(self):
-        """PDFを任意のページで分割する"""
-        pass
+        """選択したページでPDFを分割する"""
+        if not self.selected_pdf or not self.selected_pages:
+            print("PDFが選択されていません、または分割ページが選ばれていません。")
+            return
+
+        output_base_name = self.output_entry.get()
+
+        if not output_base_name:
+            print("出力ファイル名が入力されていません。")
+            return
+
+        print(f"選択されたページ {self.selected_pages} でPDFを分割中...")
+
+        try:
+            pdf = pikepdf.open(self.selected_pdf)
+
+            for page_num in self.selected_pages:
+                new_pdf = pikepdf.Pdf.new()
+                new_pdf.pages.append(pdf.pages[page_num])
+
+                # 出力ファイル名を決定
+                output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_page{page_num + 1}.pdf")
+
+                # 新しいPDFを保存
+                new_pdf.save(output_filename)
+
+                print(f"分割されたPDFが保存されました: {output_filename}")
+
+        except Exception as e:
+            print(f"PDFの分割中にエラーが発生しました: {e}")
 
 # アプリケーションの起動
 if __name__ == "__main__":
