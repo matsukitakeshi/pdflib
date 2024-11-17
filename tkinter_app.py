@@ -26,6 +26,7 @@ class TkinterApp:
         self.root.geometry(f"{SCREEN_HEIGHT}x{SCREEN_WIDTH}")
 
         self.selected_pdf = None
+        self.selected_pdf_for_merge = None  # マージ用の2番目のPDF
         self.selected_pages = []
         self.thumbnails = []
         self.highlighted_buttons = []
@@ -43,9 +44,10 @@ class TkinterApp:
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True)
 
-        # タブ（画像変換タブとPDF分割タブ）を作成
+        # タブ（画像変換タブ、PDF分割タブ、PDFマージタブ）を作成
         self.create_convert_tab()
         self.create_split_tab()
+        self.create_merge_tab()  # 新しいPDFマージタブを追加
 
     def create_pdf_upload_button(self):
         """PDFアップロードボタンを作成"""
@@ -77,6 +79,33 @@ class TkinterApp:
         self.create_output_filename_input(split_tab)
         self.create_split_button(split_tab)
         self.create_thumbnail_area(split_tab)
+
+    def create_merge_tab(self):
+        """PDFマージタブを作成"""
+        merge_tab = ttk.Frame(self.notebook)
+        self.notebook.add(merge_tab, text="Merge PDFs")
+
+        self.create_merge_button(merge_tab)
+        self.create_merge_pdf_upload_button(merge_tab)
+
+    def create_merge_pdf_upload_button(self, parent):
+        """PDFファイルをもう一度アップロードするボタンを作成"""
+        self.pdf_upload_for_merge_button = tk.Button(
+            parent, text="Open Second PDF for Merge", command=self.open_file_dialog_for_merge
+        )
+        self.pdf_upload_for_merge_button.pack(pady=DEFAULT_PADY)
+
+        self.file_label_for_merge = tk.Label(
+            parent, text="No second PDF selected", wraplength=SCREEN_WIDTH - DEFAULT_PADY
+        )
+        self.file_label_for_merge.pack(pady=DEFAULT_PADY)
+
+    def create_merge_button(self, parent):
+        """PDFマージボタンを作成"""
+        merge_button = tk.Button(
+            parent, text="Merge PDFs", command=self.merge_pdfs
+        )
+        merge_button.pack(pady=DEFAULT_PADY)
 
     def create_output_filename_input(self, parent):
         """出力ファイル名入力フィールドを作成"""
@@ -164,6 +193,15 @@ class TkinterApp:
             self.selected_pdf = file_name
             self.load_pdf_thumbnails(file_name)
 
+    def open_file_dialog_for_merge(self):
+        """マージ用の2番目のPDFファイルダイアログ"""
+        file_name = filedialog.askopenfilename(
+            title="Choose a Second PDF for Merge", filetypes=[("PDF", "*.pdf")]
+        )
+        if file_name:
+            print(f"選択された2番目のPDFファイル: {file_name}")
+            self.file_label_for_merge.config(text=file_name)
+            self.selected_pdf_for_merge = file_name
     def convert_to_images(self):
         """PDFファイルを画像に変換する"""
         if not self.selected_pdf:
@@ -195,6 +233,39 @@ class TkinterApp:
                 print(f"Saved: {output_filename}")
         except Exception as e:
             print(f"エラーが発生しました。: {e}")
+
+    def merge_pdfs(self):
+        """2つのPDFをマージする"""
+        if not self.selected_pdf or not self.selected_pdf_for_merge:
+            print("2つのPDFが選択されていません。")
+            return
+
+        output_base_name = self.output_entry.get()
+
+        if not output_base_name:
+            print("出力ファイル名が入力されていません。")
+            return
+
+        try:
+            pdf1 = pikepdf.open(self.selected_pdf)
+            pdf2 = pikepdf.open(self.selected_pdf_for_merge)
+
+            # 新しいPDFを作成し、両方のPDFを追加
+            merged_pdf = pikepdf.Pdf.new()
+            merged_pdf.pages.extend(pdf1.pages)
+            merged_pdf.pages.extend(pdf2.pages)
+
+            # 出力ファイル名を決定
+            output_filename = os.path.join(
+                DEFAULT_OUTPUT_DIR, f"{output_base_name}_merged.pdf"
+            )
+
+            # マージしたPDFを保存
+            merged_pdf.save(output_filename)
+            print(f"マージされたPDFが保存されました: {output_filename}")
+
+        except Exception as e:
+            print(f"PDFのマージ中にエラーが発生しました: {e}")
 
     def load_pdf_thumbnails(self, pdf_path):
         """PDFのサムネイルを生成して表示する"""
