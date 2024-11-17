@@ -206,7 +206,7 @@ class TkinterApp:
             print(f"ページ {page_index + 1} を選択しました")
 
     def split_pdf(self):
-        """選択したページでPDFを分割する"""
+        """選択したページでPDFを結合する"""
         if not self.selected_pdf or not self.selected_pages:
             print("PDFが選択されていません、または分割ページが選ばれていません。")
             return
@@ -217,25 +217,29 @@ class TkinterApp:
             print("出力ファイル名が入力されていません。")
             return
 
-        print(f"選択されたページ {self.selected_pages} でPDFを分割中...")
+        print(f"選択されたページ {self.selected_pages} でPDFを結合中...")
 
         try:
             pdf = pikepdf.open(self.selected_pdf)
 
+            # 新しいPDFを作成
+            new_pdf = pikepdf.Pdf.new()
+
+            # 選択されたページを新しいPDFに追加
             for page_num in self.selected_pages:
-                new_pdf = pikepdf.Pdf.new()
                 new_pdf.pages.append(pdf.pages[page_num])
 
-                # 出力ファイル名を決定
-                output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_page{page_num + 1}.pdf")
+            # 出力ファイル名を決定
+            output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_combined.pdf")
 
-                # 新しいPDFを保存
-                new_pdf.save(output_filename)
+            # 新しいPDFを保存
+            new_pdf.save(output_filename)
 
-                print(f"分割されたPDFが保存されました: {output_filename}")
+            print(f"結合されたPDFが保存されました: {output_filename}")
 
         except Exception as e:
-            print(f"PDFの分割中にエラーが発生しました: {e}")
+            print(f"PDFの結合中にエラーが発生しました: {e}")
+
 
 # アプリケーションの起動
 if __name__ == "__main__":
