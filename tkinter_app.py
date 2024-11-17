@@ -84,9 +84,8 @@ class TkinterApp:
         """PDFマージタブを作成"""
         merge_tab = ttk.Frame(self.notebook)
         self.notebook.add(merge_tab, text="Merge PDFs")
-
-        self.create_merge_button(merge_tab)
         self.create_merge_pdf_upload_button(merge_tab)
+        self.create_merge_button(merge_tab)
 
     def create_merge_pdf_upload_button(self, parent):
         """PDFファイルをもう一度アップロードするボタンを作成"""
@@ -263,6 +262,9 @@ class TkinterApp:
             # マージしたPDFを保存
             merged_pdf.save(output_filename)
             print(f"マージされたPDFが保存されました: {output_filename}")
+
+            # UIにマージ後のファイル名を表示
+            self.file_label_for_merge.config(text=f"Output File: {output_filename}")
 
         except Exception as e:
             print(f"PDFのマージ中にエラーが発生しました: {e}")
