@@ -83,6 +83,21 @@ class TkinterApp:
         self.thumbnail_frame = tkinter.Frame(split_tab)
         self.thumbnail_frame.pack(pady=DEFAULT_PADY)
 
+        # キャンバスとスクロールバーの作成
+        self.canvas = tkinter.Canvas(self.thumbnail_frame)
+        self.scrollbar = tkinter.Scrollbar(self.thumbnail_frame, orient="vertical", command=self.canvas.yview)
+        self.canvas.config(yscrollcommand=self.scrollbar.set)
+
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        # サムネイル表示用フレームをキャンバス内に配置
+        self.thumbnail_canvas_frame = tkinter.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.thumbnail_canvas_frame, anchor="nw")
+
+        # サムネイルをスクロール可能にする
+        self.thumbnail_canvas_frame.bind("<Configure>", lambda e: self.canvas.config(scrollregion=self.canvas.bbox("all")))
+
     def create_output_filename_input(self, parent):
         """出力ファイル名入力フィールドを作成"""
         output_label = tkinter.Label(parent, text="Output Filename :")
@@ -177,7 +192,7 @@ class TkinterApp:
             thumbnail_tk = ImageTk.PhotoImage(thumbnail)
 
             # サムネイルをクリックできるようにボタンとして表示
-            thumbnail_button = tkinter.Button(self.thumbnail_frame, image=thumbnail_tk, command=lambda i=i: self.select_page(i))
+            thumbnail_button = tkinter.Button(self.thumbnail_canvas_frame, image=thumbnail_tk, command=lambda i=i: self.select_page(i))
             thumbnail_button.image = thumbnail_tk  # 参照を保持して画像がガーベジコレクションされないようにする
             thumbnail_button.grid(row=i // 5, column=i % 5, padx=5, pady=5)
 
