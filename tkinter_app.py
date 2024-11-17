@@ -1,10 +1,10 @@
-import tkinter
-from tkinter import filedialog
-from tkinter import ttk
-from pdf2image import convert_from_path
 import os
-from PIL import Image, ImageTk
-import pikepdf  # pikepdfを使用
+import tkinter
+from tkinter import filedialog, ttk
+
+import pikepdf
+from pdf2image import convert_from_path
+from PIL import ImageTk
 
 SCREEN_HEIGHT = 1300
 SCREEN_WIDTH = 1000
@@ -13,6 +13,7 @@ SCREEN_TITLE = "PDF Converter Tool"
 DEFAULT_PADY = 20
 DEFAULT_DPI = 150
 DEFAULT_OUTPUT_DIR = "./output"
+
 
 class TkinterApp:
     """PDF周りGUIアプリケーションのクラス"""
@@ -46,10 +47,14 @@ class TkinterApp:
 
     def create_pdf_upload_button(self):
         """PDFアップロードボタンを作成"""
-        self.pdf_upload_button = tkinter.Button(self.root, text="Open PDF", command=self.open_file_dialog)
+        self.pdf_upload_button = tkinter.Button(
+            self.root, text="Open PDF", command=self.open_file_dialog
+        )
         self.pdf_upload_button.pack(pady=DEFAULT_PADY)
 
-        self.file_label = tkinter.Label(self.root, text="No file selected", wraplength=SCREEN_WIDTH - DEFAULT_PADY)
+        self.file_label = tkinter.Label(
+            self.root, text="No file selected", wraplength=SCREEN_WIDTH - DEFAULT_PADY
+        )
         self.file_label.pack(pady=DEFAULT_PADY)
 
     def create_convert_tab(self):
@@ -86,7 +91,9 @@ class TkinterApp:
 
         # キャンバスとスクロールバーの作成
         self.canvas = tkinter.Canvas(self.thumbnail_frame)
-        self.scrollbar = tkinter.Scrollbar(self.thumbnail_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollbar = tkinter.Scrollbar(
+            self.thumbnail_frame, orient="vertical", command=self.canvas.yview
+        )
         self.canvas.config(yscrollcommand=self.scrollbar.set)
 
         self.scrollbar.pack(side="right", fill="y")
@@ -94,10 +101,15 @@ class TkinterApp:
 
         # サムネイル表示用フレームをキャンバス内に配置
         self.thumbnail_canvas_frame = tkinter.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.thumbnail_canvas_frame, anchor="nw")
+        self.canvas.create_window(
+            (0, 0), window=self.thumbnail_canvas_frame, anchor="nw"
+        )
 
         # サムネイルをスクロール可能にする
-        self.thumbnail_canvas_frame.bind("<Configure>", lambda e: self.canvas.config(scrollregion=self.canvas.bbox("all")))
+        self.thumbnail_canvas_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.config(scrollregion=self.canvas.bbox("all")),
+        )
 
     def create_output_filename_input(self, parent):
         """出力ファイル名入力フィールドを作成"""
@@ -114,7 +126,12 @@ class TkinterApp:
         extension_label = tkinter.Label(parent, text="Select Image Format:")
         extension_label.pack(pady=DEFAULT_PADY // 2)
 
-        self.extension_combobox = ttk.Combobox(parent, textvariable=self.extension_var, values=["PNG", "JPEG"], state="readonly")
+        self.extension_combobox = ttk.Combobox(
+            parent,
+            textvariable=self.extension_var,
+            values=["PNG", "JPEG"],
+            state="readonly",
+        )
         self.extension_combobox.pack(pady=DEFAULT_PADY // 2)
 
     def create_dpi_slider(self, parent):
@@ -122,18 +139,24 @@ class TkinterApp:
         dpi_label = tkinter.Label(parent, text="Select DPI:")
         dpi_label.pack(pady=DEFAULT_PADY // 2)
 
-        self.dpi_slider = tkinter.Scale(parent, from_=150, to=400, orient="horizontal", resolution=10, label="DPI")
+        self.dpi_slider = tkinter.Scale(
+            parent, from_=150, to=400, orient="horizontal", resolution=10, label="DPI"
+        )
         self.dpi_slider.set(DEFAULT_DPI)
         self.dpi_slider.pack(pady=DEFAULT_PADY)
 
     def create_convert_button(self, parent):
         """画像化ボタンを作成"""
-        image_create_button = tkinter.Button(parent, text="Convert to Images", command=self.convert_to_images)
+        image_create_button = tkinter.Button(
+            parent, text="Convert to Images", command=self.convert_to_images
+        )
         image_create_button.pack(pady=DEFAULT_PADY)
 
     def create_split_button(self, parent):
         """PDF分割ボタンを作成"""
-        split_button = tkinter.Button(parent, text="Split PDF into Pages", command=self.split_pdf)
+        split_button = tkinter.Button(
+            parent, text="Split PDF into Pages", command=self.split_pdf
+        )
         split_button.pack(pady=DEFAULT_PADY)
 
     def open_file_dialog(self):
@@ -164,7 +187,9 @@ class TkinterApp:
             print("出力ファイル名が入力されていません。")
             return
 
-        print(f"以下の条件で画像変換が完了しました。 DPI: {selected_dpi}, 拡張子: {selected_extension}, ファイル名: {output_base_name}")
+        print(
+            f"以下の条件で画像変換が完了しました。 DPI: {selected_dpi}, 拡張子: {selected_extension}, ファイル名: {output_base_name}"
+        )
 
         # 出力フォルダ作成
         os.makedirs(DEFAULT_OUTPUT_DIR, exist_ok=True)
@@ -172,7 +197,9 @@ class TkinterApp:
         try:
             pages = convert_from_path(self.selected_pdf, dpi=selected_dpi)
             for i, page in enumerate(pages):
-                output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_{i}.{selected_extension}")
+                output_filename = os.path.join(
+                    DEFAULT_OUTPUT_DIR, f"{output_base_name}_{i}.{selected_extension}"
+                )
                 page.save(output_filename, selected_extension.upper())
                 print(f"Saved: {output_filename}")
         except Exception as e:
@@ -193,15 +220,18 @@ class TkinterApp:
             thumbnail_tk = ImageTk.PhotoImage(thumbnail)
 
             # サムネイルボタンを作成
-            thumbnail_button = tkinter.Button(self.thumbnail_canvas_frame, image=thumbnail_tk)
+            thumbnail_button = tkinter.Button(
+                self.thumbnail_canvas_frame, image=thumbnail_tk
+            )
             thumbnail_button.image = thumbnail_tk  # 参照を保持して画像がガーベジコレクションされないようにする
 
             # ボタンにコマンドを設定
-            thumbnail_button.config(command=lambda i=i, button=thumbnail_button: self.select_page(i, button))
+            thumbnail_button.config(
+                command=lambda i=i, button=thumbnail_button: self.select_page(i, button)
+            )
 
             # サムネイルボタンを表示
             thumbnail_button.grid(row=i // 5, column=i % 5, padx=5, pady=5)
-
 
     def select_page(self, page_index, thumbnail_button):
         """ページを選択する処理"""
@@ -241,7 +271,9 @@ class TkinterApp:
                 new_pdf.pages.append(pdf.pages[page_num])
 
             # 出力ファイル名を決定
-            output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}.pdf")
+            output_filename = os.path.join(
+                DEFAULT_OUTPUT_DIR, f"{output_base_name}.pdf"
+            )
 
             # 新しいPDFを保存
             new_pdf.save(output_filename)
@@ -270,6 +302,7 @@ class TkinterApp:
         if button in self.highlighted_buttons:
             button.config(highlightbackground=None, highlightthickness=0)
             self.highlighted_buttons.remove(button)
+
 
 # アプリケーションの起動
 if __name__ == "__main__":
