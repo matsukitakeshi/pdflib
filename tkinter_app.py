@@ -26,7 +26,7 @@ class TkinterApp:
         self.selected_pdf = None
         self.selected_pages = []  # 選択されたページを保持
         self.thumbnails = []  # サムネイル画像を保持
-        self.highlighted_button = None
+        self.highlighted_buttons = []
         self.init_ui()
 
         self.root.mainloop()
@@ -195,7 +195,7 @@ class TkinterApp:
             # サムネイルボタンを作成
             thumbnail_button = tkinter.Button(self.thumbnail_canvas_frame, image=thumbnail_tk)
             thumbnail_button.image = thumbnail_tk  # 参照を保持して画像がガーベジコレクションされないようにする
-            
+
             # ボタンにコマンドを設定
             thumbnail_button.config(command=lambda i=i, button=thumbnail_button: self.select_page(i, button))
 
@@ -226,6 +226,8 @@ class TkinterApp:
             print("出力ファイル名が入力されていません。")
             return
 
+        # 選択されたページを昇順にソート
+        self.selected_pages.sort()
         print(f"選択されたページ {self.selected_pages} でPDFを結合中...")
 
         try:
@@ -251,15 +253,15 @@ class TkinterApp:
 
     def add_highlight(self, button):
         """選択したサムネイルに赤い枠を追加"""
-        if self.highlighted_button:
-            self.remove_highlight(self.highlighted_button)  # 前回選択したボタンから枠を取り除く
-        button.config(highlightbackground="red", highlightthickness=3)
-        self.highlighted_button = button
+        if button not in self.highlighted_buttons:
+            button.config(highlightbackground="red", highlightthickness=3)
+            self.highlighted_buttons.append(button)
 
     def remove_highlight(self, button):
         """選択したサムネイルから赤い枠を取り除く"""
-        button.config(highlightbackground=None, highlightthickness=0)
-        self.highlighted_button = None
+        if button in self.highlighted_buttons:
+            button.config(highlightbackground=None, highlightthickness=0)
+            self.highlighted_buttons.remove(button)
 
 # アプリケーションの起動
 if __name__ == "__main__":
