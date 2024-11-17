@@ -10,11 +10,14 @@ SCREEN_TITLE = "Software Title"
 
 DEFAULT_PADY = 20
 DEFAULT_DPI = 150
+DEFAULT_OUTPUT_DIR = "./output"
+
 
 class TkinterApp:
-    """PDF周りGUIアプリケーションのクラス"""
-    root = None
-    file_label = None
+    """PDF周りGUIアプリケーションのクラス
+
+    tkinter内で日本語を使用すると文字化けするので英語で記載している
+    """
 
     def __init__(self):
         """メインのWindowの立ち上げ"""
@@ -22,63 +25,72 @@ class TkinterApp:
         self.root.title(SCREEN_TITLE)
         self.root.geometry(f"{SCREEN_HEIGHT}x{SCREEN_WIDTH}")
 
-        # ファイルアップロードボタンを作成
+        self.selected_pdf = None
+        self.init_ui()
+
+        self.root.mainloop()
+
+    def init_ui(self):
+        """UIの初期化"""
+        # PDFアップロードボタン
+        self.create_pdf_upload_button()
+
+        # 出力ファイル名入力フィールド
+        self.create_output_filename_input()
+
+        # 画像形式選択
+        self.create_image_format_selector()
+
+        # DPI選択スライダー
+        self.create_dpi_slider()
+
+        # 画像変換ボタン
+        self.create_convert_button()
+
+    def create_pdf_upload_button(self):
+        """PDFアップロードボタンを作成"""
         pdf_upload_button = tkinter.Button(self.root, text="Open PDF", command=self.open_file_dialog)
         pdf_upload_button.pack(pady=DEFAULT_PADY)
 
         self.file_label = tkinter.Label(self.root, text="No file selected", wraplength=SCREEN_WIDTH - DEFAULT_PADY)
         self.file_label.pack(pady=DEFAULT_PADY)
 
-        self.convert_image_tab()
-
-        self.root.mainloop()
-
-    def convert_image_tab(self):
-        """画像化変換用のタブを作成"""
-        # 出力ファイル名入力ボックス
-        output_label = tkinter.Label(self.root, text="Output Filename (without extension):")
+    def create_output_filename_input(self):
+        """出力ファイル名入力フィールドを作成"""
+        output_label = tkinter.Label(self.root, text="Output Filename :")
         output_label.pack(pady=DEFAULT_PADY // 2)
 
         self.output_entry = tkinter.Entry(self.root, width=30)
-        self.output_entry.insert(0, "output")  # デフォルト値
+        self.output_entry.insert(0, "output")
         self.output_entry.pack(pady=DEFAULT_PADY // 2)
 
-        # 拡張子選択ボタン、セレクトボックスで選択させる
+    def create_image_format_selector(self):
+        """画像形式選択セレクトボックスを作成"""
         self.extension_var = tkinter.StringVar(value="PNG")
         extension_label = tkinter.Label(self.root, text="Select Image Format:")
         extension_label.pack(pady=DEFAULT_PADY // 2)
-        self.extension_combobox = ttk.Combobox(
-            self.root,
-            textvariable=self.extension_var,
-            values=["PNG", "JPEG"],
-            state="readonly",
-        )
+
+        self.extension_combobox = ttk.Combobox(self.root, textvariable=self.extension_var, values=["PNG", "JPEG"], state="readonly")
         self.extension_combobox.pack(pady=DEFAULT_PADY // 2)
 
-        # DPI選択スライダー
+    def create_dpi_slider(self):
+        """DPI選択スライダーを作成"""
         dpi_label = tkinter.Label(self.root, text="Select DPI:")
         dpi_label.pack(pady=DEFAULT_PADY // 2)
 
-        self.dpi_slider = tkinter.Scale(
-            self.root,
-            from_=150,
-            to=400,
-            orient="horizontal",
-            resolution=10,
-            label="DPI",
-        )
+        self.dpi_slider = tkinter.Scale(self.root, from_=150, to=400, orient="horizontal", resolution=10, label="DPI")
         self.dpi_slider.set(DEFAULT_DPI)
         self.dpi_slider.pack(pady=DEFAULT_PADY)
 
-        # 画像化ボタンを作成
+    def create_convert_button(self):
+        """画像化ボタンを作成"""
         image_create_button = tkinter.Button(self.root, text="Convert to Images", command=self.convert_to_images)
         image_create_button.pack(pady=DEFAULT_PADY)
 
     def open_file_dialog(self):
-        """ファイルのダイアログを開き、ファイル名を取得する"""
+        """ファイルダイアログを開き、選択されたPDFファイルを設定"""
         file_name = filedialog.askopenfilename(
-            title="Choose a PDF file",
-            filetypes=[("PDF", "*.pdf")],
+            title="Choose a PDF file", filetypes=[("PDF", "*.pdf")]
         )
         if file_name:
             print(f"選択されたPDFファイル: {file_name}")
@@ -90,33 +102,32 @@ class TkinterApp:
 
     def convert_to_images(self):
         """PDFファイルを画像に変換する"""
-        if not hasattr(self, 'selected_pdf') or not self.selected_pdf:
-            print("No PDF file selected!")
+        if not self.selected_pdf:
+            print("PDFが選択されていません。")
             return
 
-        # 入力された情報を取得
         selected_dpi = self.dpi_slider.get()
         selected_extension = self.extension_var.get().lower()
         output_base_name = self.output_entry.get()
 
         if not output_base_name:
-            print("Output filename is empty. Please enter a valid filename.")
+            print("出力ファイル名が入力されていません。")
             return
 
-        print(f"Converting PDF with DPI: {selected_dpi}, Format: {selected_extension}, Base Name: {output_base_name}")
+        print(f"以下の条件で画像変換が完了しました。 DPI: {selected_dpi}, 拡張子: {selected_extension}, ファイル名: {output_base_name}")
 
-        # 出力フォルダを作成（存在しない場合）
-        output_dir = "./output"
-        os.makedirs(output_dir, exist_ok=True)
+        # 出力フォルダ作成
+        os.makedirs(DEFAULT_OUTPUT_DIR, exist_ok=True)
 
         try:
             pages = convert_from_path(self.selected_pdf, dpi=selected_dpi)
             for i, page in enumerate(pages):
-                output_filename = f"{output_dir}/{output_base_name}_{i}.{selected_extension}"
+                output_filename = os.path.join(DEFAULT_OUTPUT_DIR, f"{output_base_name}_{i}.{selected_extension}")
                 page.save(output_filename, selected_extension.upper())
                 print(f"Saved: {output_filename}")
         except Exception as e:
-            print(f"Error during conversion: {e}")
+            print(f"エラーが発生しました。: {e}")
+
 
 # アプリケーションの起動
 if __name__ == "__main__":
