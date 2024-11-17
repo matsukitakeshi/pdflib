@@ -26,6 +26,7 @@ class TkinterApp:
         self.selected_pdf = None
         self.selected_pages = []  # 選択されたページを保持
         self.thumbnails = []  # サムネイル画像を保持
+        self.highlighted_button = None
         self.init_ui()
 
         self.root.mainloop()
@@ -191,19 +192,27 @@ class TkinterApp:
             # 画像をTkinterで表示可能な形式に変換
             thumbnail_tk = ImageTk.PhotoImage(thumbnail)
 
-            # サムネイルをクリックできるようにボタンとして表示
-            thumbnail_button = tkinter.Button(self.thumbnail_canvas_frame, image=thumbnail_tk, command=lambda i=i: self.select_page(i))
+            # サムネイルボタンを作成
+            thumbnail_button = tkinter.Button(self.thumbnail_canvas_frame, image=thumbnail_tk)
             thumbnail_button.image = thumbnail_tk  # 参照を保持して画像がガーベジコレクションされないようにする
+            
+            # ボタンにコマンドを設定
+            thumbnail_button.config(command=lambda i=i, button=thumbnail_button: self.select_page(i, button))
+
+            # サムネイルボタンを表示
             thumbnail_button.grid(row=i // 5, column=i % 5, padx=5, pady=5)
 
-    def select_page(self, page_index):
+
+    def select_page(self, page_index, thumbnail_button):
         """ページを選択する処理"""
         if page_index in self.selected_pages:
             self.selected_pages.remove(page_index)
             print(f"ページ {page_index + 1} を解除しました")
+            self.remove_highlight(thumbnail_button)
         else:
             self.selected_pages.append(page_index)
             print(f"ページ {page_index + 1} を選択しました")
+            self.add_highlight(thumbnail_button)
 
     def split_pdf(self):
         """選択したページでPDFを結合する"""
@@ -240,6 +249,17 @@ class TkinterApp:
         except Exception as e:
             print(f"PDFの結合中にエラーが発生しました: {e}")
 
+    def add_highlight(self, button):
+        """選択したサムネイルに赤い枠を追加"""
+        if self.highlighted_button:
+            self.remove_highlight(self.highlighted_button)  # 前回選択したボタンから枠を取り除く
+        button.config(highlightbackground="red", highlightthickness=3)
+        self.highlighted_button = button
+
+    def remove_highlight(self, button):
+        """選択したサムネイルから赤い枠を取り除く"""
+        button.config(highlightbackground=None, highlightthickness=0)
+        self.highlighted_button = None
 
 # アプリケーションの起動
 if __name__ == "__main__":
