@@ -13,3 +13,21 @@
 git clone {当レポジトリ}
 ./pdflib/dist/main
 ```
+
+## 環境構築
+
+- Ubuntu python3.12 の場合
+
+```
+pip3.12 install pikepdf
+pip3.12 install pytk
+pip3.12 install pdf2image
+
+sudo apt update
+sudo apt install python3.12-tk
+sudo apt install poppler-utils
+```
+
+```
+python3.12 main.py
+```
